@@ -18,6 +18,55 @@ app.use(BodyParser.urlencoded({ extended: true }));
 app.use(BodyParser.json());
 
 /**
+ * takes the detail data sent over from the
+ * server and deconstructs it into a JSON
+ * object for use in a React state.
+ *
+ * @param {JSON} detailData
+ * @returns JSON data
+ */
+function deconstructDetailData(detailData) {
+  let detailArr = [];
+  detailData.forEach((detail) => {
+    // deconstruct for better variable names
+    const {
+      id: id,
+      item_name: name,
+      item_notes: notes,
+      item_price: cost,
+      item_qty: quantity,
+    } = detail;
+    detailArr.push({
+      id,
+      name,
+      notes,
+      cost,
+      quantity,
+      total: (quantity * cost).toFixed(2),
+    });
+  });
+  return detailArr;
+}
+
+function deconstructGeneralData(invoiceData) {
+  // deconstruct the general invoice info
+  const {
+    id,
+    price,
+    location,
+    date_created: date,
+    invoice_notes: invoiceNotes,
+  } = invoiceData;
+
+  return {
+    id: id,
+    price: price,
+    location: location,
+    date: new Date(date).toISOString().substring(0, 10),
+    invoiceNotes: invoiceNotes,
+  };
+}
+/**
  * Get all invoices in database and return them. Will have to limit this later and
  * possibly just general details for a dashboard at some point.
  */
@@ -175,8 +224,36 @@ app.delete("/DeleteInvoice", async (req, res) => {
   }
 });
 
-app.patch("/Update", async (req, res) => {
-  console.log("Update Called!");
+app.put("/Update", async (req, res) => {
+  console.log(req.body.details); // debugging
+  const detailList = req.body.details;
+  const { id, price, location, date, invoiceNotes } = req.body.general;
+
+  // try to update the general info
+  try {
+    await db.query(
+      `UPDATE invoice SET price=$1, location=$2, date_created=$3, invoice_notes=$4 WHERE id=$5`,
+      [price, location, date, invoiceNotes, id]
+    );
+
+    // delete old line details
+    await db.query(`DELETE FROM invoice_item WHERE invoice_id=$1`, [id]);
+
+    // re-add all line items
+    detailList.forEach(async (line) => {
+      console.log(line);
+      await db.query(
+        "INSERT INTO invoice_item(invoice_id, item_name, item_price, item_qty, item_notes) " +
+          "VALUES($1, $2, $3, $4, $5)",
+        [id, line.name, line.cost, line.quantity, line.notes]
+      );
+    });
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.log("[error] error during update" + error);
+    res.sendStatus(500);
+  }
 });
 
 app.listen(port, () => {
