@@ -175,6 +175,10 @@ app.delete("/DeleteInvoice", async (req, res) => {
   }
 });
 
+app.patch("/Update", async (req, res) => {
+  console.log("Update Called!");
+});
+
 app.listen(port, () => {
   console.log(`[api] listening on port ${port}`);
 });
