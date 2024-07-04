@@ -138,7 +138,7 @@ app.get("/GetDetails", async (req, res) => {
 });
 
 /**
- * returns
+ * returns all invoices from **today**
  */
 app.get("/GetInvoicesFromDate", async (req, res) => {
   const today = new Date().toLocaleDateString().replaceAll("/", "-");
@@ -147,6 +147,23 @@ app.get("/GetInvoicesFromDate", async (req, res) => {
     const response = await db.query(
       "SELECT * FROM invoice WHERE date_created = $1",
       [today]
+    );
+    res.json(response.rows);
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
+});
+
+/**
+ * given two dates, will return all invoices that are within the date range
+ */
+app.get("/InvoicesDateRange", async (req, res) => {
+  try {
+    const { begin, end } = req.query;
+    const response = await db.query(
+      "select * from invoice where date_created >= $1 and date_created <= $2",
+      [begin, end]
     );
     res.json(response.rows);
   } catch (error) {
