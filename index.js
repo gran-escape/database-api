@@ -2,13 +2,14 @@ import Express, { urlencoded } from "express";
 import BodyParser from "body-parser";
 import pg from "pg";
 
+const dbPass = process.env.DB_LOGIN;
 const app = new Express();
 const port = 4000;
 const db = new pg.Client({
   database: "invoices",
   port: 5432,
   user: "postgres",
-  password: "bH-1994",
+  password: dbPass,
   host: "localhost",
 });
 
