@@ -78,7 +78,7 @@ app.get("/GetAllInvoiceGeneral", async (req, res) => {
     const response = await db.query(
       "SELECT * FROM invoice ORDER BY date_created DESC"
     );
-    console.log(response.rows);
+    //console.log(response.rows);
     res.json(response.rows);
   } catch (error) {
     console.error(error);
@@ -201,7 +201,8 @@ app.post("/AddInvoice", async (req, res) => {
   }
 
   rows.forEach(async (row, index) => {
-    const { name, cost, quantity, notes } = row;
+    console.log(row);
+    const { name, cost, quantity, notes, taxVal, taxed } = row;
 
     try {
       console.log(invoiceId);
@@ -212,7 +213,6 @@ app.post("/AddInvoice", async (req, res) => {
       );
     } catch (error) {
       console.log(`[error] problem sending detail ${index}\n` + error);
-      res.sendStatus(500);
     }
   });
 
